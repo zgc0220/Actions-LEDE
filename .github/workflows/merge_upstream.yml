@@ -38,7 +38,7 @@ jobs:
 
     - name: Load upstream commits
       run:  |
-        git remote add upstream https://github.com/P3TERX/Actions-OpenWrt
+        git remote add upstream https://github.com/zgc/Actions-LEDE
         git fetch upstream
         git rebase upstream/main
 

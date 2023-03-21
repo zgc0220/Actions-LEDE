@@ -514,15 +514,6 @@ mv clash package/lean/luci-app-openclash/root/etc/openclash/core/clash_meta
 chmod +x package/lean/luci-app-openclash/root/etc/openclash/core/clash_meta
 curl --retry 5 -L https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat -o package/lean/luci-app-openclash/root/etc/openclash/GeoIP.dat
 
-SMARTDNS_BRANCH=master
-if [ ! -e $GITHUB_WORKSPACE/smartdns ]; then
-  git clone --depth 1 https://github.com/pymumu/smartdns.git $GITHUB_WORKSPACE/smartdns
-else
-  pushd $GITHUB_WORKSPACE/smartdns
-  git pull origin $SMARTDNS_BRANCH
-  git reset --hard origin/$SMARTDNS_BRANCH
-  popd
-fi
 echo '
 config smartdns
 	option server_name 'smartdns'
@@ -531,7 +522,6 @@ config smartdns
 	option dualstack_ip_selection '0'
 	option prefetch_domain '1'
 	option serve_expired '1'
-	option redirect 'none'
 	option seconddns_port '7053'
 	option seconddns_no_rule_addr '0'
 	option seconddns_no_rule_nameserver '0'
@@ -547,6 +537,16 @@ config smartdns
 	option seconddns_tcp_server '1'
 	option seconddns_no_cache '1'
 	option seconddns_no_speed_check '1'
+	option auto_set_dnsmasq '0'
+	option speed_check_mode 'ping,tcp:80,tcp:443'
+	option response_mode 'first-ping'
+	option bind_device '1'
+	option cache_persist '1'
+	option resolve_local_hostnames '1'
+	option force_https_soa '1'
+	option rr_ttl_min '600'
+	option seconddns_force_aaaa_soa '1'
+	option enable_auto_update '0'
 
 config server
 	option type 'udp'
@@ -829,15 +829,11 @@ config server
 	option enabled '0'
 	option host_name 'dns.alidns.com'
 	option http_host 'dns.alidns.com'
-' >$GITHUB_WORKSPACE/smartdns/package/openwrt/files/etc/config/smartdns
-echo '
 
-force-qtype-SOA 65
-response-mode first-ping
-speed-check-mode ping,tcp:80,tcp:443
-' >>$GITHUB_WORKSPACE/smartdns/package/openwrt/custom.conf
-cat $GITHUB_WORKSPACE/smartdns/package/openwrt/files/etc/config/smartdns >feeds/packages/net/smartdns/conf/smartdns.conf
-cat $GITHUB_WORKSPACE/smartdns/package/openwrt/custom.conf >feeds/packages/net/smartdns/conf/custom.conf
+config domain-rule
+	option no_speed_check '0'
+	option force_aaaa_soa '0'
+' >feeds/packages/net/smartdns/conf/smartdns.conf
 
 latest_ver="$(curl --retry 5 https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest 2>/dev/null|grep -E 'tag_name' |grep -E 'v[0-9.]+' -o 2>/dev/null)"
 curl --retry 5 -L https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_linux_${Arch}.tar.gz | tar zxf -

@@ -29,15 +29,7 @@ sed -i "s/..\/..\/lang\/golang\/golang-package.mk/\$(TOPDIR)\/feeds\/packages\/l
 
 rm -rf package/lean/luci-app-openclash
 OPENCLASH_BRANCH=dev
-if [ ! -e $GITHUB_WORKSPACE/OpenClash ]; then
-  git clone --depth 1 -b $OPENCLASH_BRANCH https://github.com/vernesong/OpenClash.git $GITHUB_WORKSPACE/OpenClash
-else
-  pushd $GITHUB_WORKSPACE/OpenClash
-  git pull origin $OPENCLASH_BRANCH
-  git reset --hard origin/$OPENCLASH_BRANCH
-  popd
-fi
-mv $GITHUB_WORKSPACE/OpenClash/luci-app-openclash package/lean
+svn co https://github.com/vernesong/OpenClash/branches/$OPENCLASH_BRANCH/luci-app-openclash package/lean/luci-app-openclash
 
 rm -rf package/lean/luci-app-smartdns
 svn co https://github.com/immortalwrt/luci/branches/openwrt-18.06/applications/luci-app-smartdns package/lean/luci-app-smartdns

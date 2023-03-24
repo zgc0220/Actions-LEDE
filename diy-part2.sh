@@ -19,11 +19,14 @@ CPU_MODEL="${Arch}"
 rm -rf feeds/luci/themes/luci-theme-argon
 git clone --depth 1 -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git feeds/luci/themes/luci-theme-argon
 
-rm -rf feeds/packages/net/smartdns
-svn co https://github.com/immortalwrt/packages/branches/openwrt-18.06/net/smartdns feeds/packages/net/smartdns
+# rm -rf feeds/packages/net/smartdns
+# svn co https://github.com/immortalwrt/packages/branches/openwrt-18.06/net/smartdns feeds/packages/net/smartdns
+mkdir -p feeds/packages/net/smartdns/conf
+sed -i 's/PKG_BUILD_DIR)\/package\/openwrt\/custom.conf/CURDIR)\/conf\/custom.conf/g' feeds/packages/net/smartdns/Makefile
+sed -i 's/PKG_BUILD_DIR)\/package\/openwrt\/files\/etc\/config\/smartdns/CURDIR)\/conf\/smartdns.conf/g' feeds/packages/net/smartdns/Makefile
 
-rm -rf feeds/packages/net/zerotier
-svn co https://github.com/immortalwrt/packages/branches/openwrt-18.06/net/zerotier feeds/packages/net/zerotier
+# rm -rf feeds/packages/net/zerotier
+# svn co https://github.com/immortalwrt/packages/branches/openwrt-18.06/net/zerotier feeds/packages/net/zerotier
 
 cp $GITHUB_WORKSPACE/scripts/check_smartdns_connect.sh package/base-files/files/etc
 cp $GITHUB_WORKSPACE/scripts/check_openclash_connect.sh package/base-files/files/etc
@@ -835,7 +838,6 @@ config domain-rule
 	option force_aaaa_soa '0'
 ' >feeds/packages/net/smartdns/conf/smartdns.conf
 
-rm -f feeds/packages/net/smartdns/conf/custom.conf
 curl --retry 5 -L https://github.com/pymumu/smartdns/raw/master/package/openwrt/custom.conf -o feeds/packages/net/smartdns/conf/custom.conf
 
 latest_ver="$(curl --retry 5 https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest 2>/dev/null|grep -E 'tag_name' |grep -E 'v[0-9.]+' -o 2>/dev/null)"

@@ -32,7 +32,7 @@ OPENCLASH_BRANCH=dev
 svn co https://github.com/vernesong/OpenClash/branches/$OPENCLASH_BRANCH/luci-app-openclash package/lean/luci-app-openclash
 
 rm -rf package/lean/luci-app-smartdns
-svn co https://github.com/zgc/luci/branches/openwrt-18.06/applications/luci-app-smartdns package/lean/luci-app-smartdns
+svn co https://github.com/immortalwrt/luci/branches/openwrt-18.06/applications/luci-app-smartdns package/lean/luci-app-smartdns
 sed -i "s/..\/..\/luci.mk/\$(TOPDIR)\/feeds\/luci\/luci.mk/g" package/lean/luci-app-smartdns/Makefile
 
 rm -rf package/lean/luci-app-adguardhome

@@ -18,7 +18,7 @@
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
 rm -rf package/lean/luci-app-argon-config
-git clone --depth 1 https://github.com/jerrykuku/luci-app-argon-config.git package/lean/luci-app-argon-config
+git clone --depth 1 -b 18.06 https://github.com/jerrykuku/luci-app-argon-config.git package/lean/luci-app-argon-config
 
 rm -rf package/lean/luci-app-filebrowser
 svn co https://github.com/immortalwrt/luci/branches/openwrt-18.06/applications/luci-app-filebrowser package/lean/luci-app-filebrowser

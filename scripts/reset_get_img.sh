@@ -3,7 +3,7 @@
 IMG_DIR=${IMG_DIR:-/tmp}
 cd $IMG_DIR
 
-GITHUB_REPO="zgc/Actions-LEDE"
+GITHUB_REPO="zgc0220/Actions-LEDE"
 ARCH=`uname -m`
 
 get_latest_release() {

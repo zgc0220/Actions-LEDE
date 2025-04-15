@@ -111,6 +111,8 @@ jobs:
         echo -e "GITHUB_WORKSPACE -> $GITHUB_WORKSPACE"
         df -hT $GITHUB_WORKSPACE
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        df -hT
 
     - name: Cache
       uses: stupidloud/cachewrtbuild@main

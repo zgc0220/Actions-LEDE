@@ -103,18 +103,16 @@ jobs:
         sudo -E apt clean
         sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android /opt/ghc /usr/local/graalvm /usr/local/.ghcup /usr/local/share/powershell /usr/local/share/chromium /usr/local/lib/node_modules
         sudo -E timedatectl set-timezone "$TZ"
-        sudo mkdir -p /mnt/workdir
-        sudo chown $USER:$GROUPS /mnt/workdir
+        sudo chown $USER:$GROUPS $GITHUB_WORKSPACE
 
     - name: Clone source code
-      working-directory: /mnt/workdir
+      working-directory: ./
       run: |
         echo -e "PWS -> $PWD"
         df -hT $PWD
         echo -e "GITHUB_WORKSPACE -> $GITHUB_WORKSPACE"
         df -hT $GITHUB_WORKSPACE
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /mnt/workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: Cache
       uses: stupidloud/cachewrtbuild@main

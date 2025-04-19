@@ -164,6 +164,10 @@ config openclash 'config'
 	option dnsmasq_cachesize '0'
 	option cachesize_dns '1'
 	option dashboard_password 'openwrt'
+	option geoasn_auto_update '1'
+	option geoasn_update_week_time '*'
+	option geoasn_update_day_time '1'
+	option geoasn_custom_url 'https://fastly.jsdelivr.net/gh/xishang0128/geoip@release/GeoLite2-ASN.mmdb'
 
 config dns_servers
 	option type 'udp'

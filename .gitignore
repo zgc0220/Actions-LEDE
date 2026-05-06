@@ -1,0 +1,41 @@
+# OpenWrt source (cloned via git)
+/openwrt/
+/openwrt.bak.*/
+
+# Build cache
+/cache/
+/staging_dir/
+/build_dir/
+/tmp/
+
+# Feeds & packages (cloned via scripts)
+/feeds/
+/package/lean/luci-app-*/
+!/package/lean/default-settings/
+
+# Generated firmware & outputs
+/release/*.img.gz
+/release/*.img
+/release/*.vmdk
+/release/*.vdi
+/release/*.qcow2
+/release/*.tar.gz
+/output/
+
+# Log files
+*.log
+/docker-compile.pid
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Keep empty directories with .gitkeep
+!.gitkeep

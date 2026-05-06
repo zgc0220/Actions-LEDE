@@ -57,6 +57,16 @@ pushd openwrt
 GITHUB_WORKSPACE=$GITHUB_WORKSPACE $GITHUB_WORKSPACE/$DIY_P2_SH
 make defconfig
 make download -j8
+
+# Fix vlmcsd GCC 13 compatibility
+# $(notdir $(CC)) breaks when CC="ccache gcc" (contains spaces)
+# Pre-extract vlmcsd source and patch GNUmakefile before build
+make package/feeds/packages/vlmcsd/prepare 2>/dev/null || true
+VLMCSD_GNUMAKE=$(ls build_dir/target-*/vlmcsd-*/src/GNUmakefile 2>/dev/null | head -1)
+if [ -n "$VLMCSD_GNUMAKE" ]; then
+  sed -i 's/notdir $(CC)/lastword $(subst ccache, ,$(CC))/g' "$VLMCSD_GNUMAKE"
+fi
+
 make -j$(nproc) || make -j1 || make -j1 V=s
 popd
 

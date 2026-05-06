@@ -2,29 +2,26 @@
 /openwrt/
 /openwrt.bak.*/
 
-# Build cache
+# Build cache & directories
 /cache/
 /staging_dir/
 /build_dir/
 /tmp/
 
-# Feeds & packages (cloned via scripts)
+# Feeds & packages (cloned via scripts, should live inside openwrt/)
 /feeds/
-/package/lean/luci-app-*/
-!/package/lean/default-settings/
+/package/
 
-# Generated firmware & outputs
-/release/*.img.gz
-/release/*.img
-/release/*.vmdk
-/release/*.vdi
-/release/*.qcow2
-/release/*.tar.gz
+# Generated firmware, build artifacts & outputs
+/release/
 /output/
+/openwrt/bin/
 
 # Log files
 *.log
-/docker-compile.pid
+
+# Runtime files
+*.pid
 
 # OS files
 .DS_Store

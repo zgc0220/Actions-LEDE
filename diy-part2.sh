@@ -1128,7 +1128,3 @@ os:
   rlimit_nofile: 0
 schema_version: 12
 ' >package/base-files/files/etc/AdGuardHome.yaml
-
-# Fix vlmcsd GCC 13 compatibility issue
-# The GNUmakefile uses $(notdir $(CC)) which breaks when CC contains spaces (e.g. "ccache gcc")
-# Fixed via patches/001-fix-gcc13.patch in feeds/packages/net/vlmcsd/

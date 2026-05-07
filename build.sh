@@ -43,9 +43,9 @@ GITHUB_WORKSPACE=$GITHUB_WORKSPACE $GITHUB_WORKSPACE/$DIY_P1_SH
 [ -e ../$CONFIG_FILE ] && cp ../$CONFIG_FILE .config
 make defconfig
 
-# 先编译 luci-base 生成 po2lmo 工具（解决 default-settings 依赖）
-echo "编译 luci-base 生成 po2lmo..."
-make package/luci-base/host/compile -j$(nproc) || make package/luci-base/host/compile -j1 V=s
+# LuCI 25.12 已移除 luci-base/host/compile，po2lmo 不再需要
+# echo "编译 luci-base 生成 po2lmo..."
+# make package/luci-base/host/compile -j$(nproc) || make package/luci-base/host/compile -j1 V=s
 
 popd
 

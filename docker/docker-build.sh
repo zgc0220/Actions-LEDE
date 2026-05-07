@@ -22,7 +22,7 @@ case "${1:-help}" in
         ;;
     compile)
         echo "开始编译..."
-        docker run -it --rm \
+        docker run -i --rm \
             -v "${PROJECT_ROOT}:/workdir/Actions-LEDE" \
             "${IMAGE_NAME}:latest" \
             bash -c "cd /workdir/Actions-LEDE && bash build.sh"

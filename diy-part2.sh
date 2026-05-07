@@ -28,6 +28,37 @@ sed -i 's/PKG_BUILD_DIR)\/package\/openwrt\/custom.conf/CURDIR)\/conf\/custom.co
 sed -i 's/PKG_BUILD_DIR)\/package\/openwrt\/files\/etc\/config\/smartdns/CURDIR)\/conf\/smartdns.conf/g' feeds/packages/net/smartdns/Makefile
 
 cp $GITHUB_WORKSPACE/scripts/check_smartdns_connect.sh package/base-files/files/etc
+
+# 降级 zerotier 到 1.14.2（服务端不兼容 1.16.0）
+# 使用 immortalwrt 1.14.1 的 patches（适用于 1.14.x 系列）
+if [ -d feeds/packages/net/zerotier ]; then
+    ZT_COMMIT="660b10f0dc9c"
+    ZT_URL="https://raw.githubusercontent.com/immortalwrt/packages/${ZT_COMMIT}/net/zerotier"
+    
+    rm -rf feeds/packages/net/zerotier
+    mkdir -p feeds/packages/net/zerotier/files/etc/init.d feeds/packages/net/zerotier/files/etc/config feeds/packages/net/zerotier/files/etc/uci-defaults feeds/packages/net/zerotier/patches
+    
+    # 1. 下载 Makefile + Config.in
+    curl -sL "${ZT_URL}/Makefile" -o feeds/packages/net/zerotier/Makefile
+    curl -sL "${ZT_URL}/Config.in" -o feeds/packages/net/zerotier/Config.in
+    
+    # 2. 下载 files
+    curl -sL "https://api.github.com/repos/immortalwrt/packages/contents/net/zerotier/files/etc/init.d?ref=${ZT_COMMIT}" | python3 -c "import json,sys; d=json.load(sys.stdin); print([f['name'] for f in d if isinstance(d,list)][0])"
+    curl -sL "${ZT_URL}/files/etc/init.d/zerotier" -o feeds/packages/net/zerotier/files/etc/init.d/zerotier
+    curl -sL "${ZT_URL}/files/etc/config/zerotier" -o feeds/packages/net/zerotier/files/etc/config/zerotier 2>/dev/null || true
+    curl -sL "${ZT_URL}/files/etc/uci-defaults/zerotier" -o feeds/packages/net/zerotier/files/etc/uci-defaults/zerotier 2>/dev/null || true
+    
+    # 3. 下载 patches（用 curl 按文件名下载）
+    for patch in 0001-fix-miniupnpc-natpmp-include-path.patch 0002-remove-PIE-options.patch 0003-fix-compilation-for-arm_cortex-a7-neon.patch 0004-add-missing-libatomic.patch 0005-remove-noexecstack.patch; do
+        curl -sL "${ZT_URL}/patches/${patch}" -o "feeds/packages/net/zerotier/patches/${patch}"
+    done
+    
+    # 4. 修改 Makefile 版本为 1.14.2
+    sed -i 's/PKG_VERSION:=1.14.1/PKG_VERSION:=1.14.2/' feeds/packages/net/zerotier/Makefile
+    sed -i 's|4f9f40b27c5a78389ed3f3216c850921f6298749e5819e9f2edabb2672ce9ca0|c2f64339fccf5148a7af089b896678d655fbfccac52ddce7714314a59d7bddbb|' feeds/packages/net/zerotier/Makefile
+    
+    echo "✅ zerotier 已降级到 1.14.2（使用 immortalwrt 1.14.1 patches）"
+fi
 cp $GITHUB_WORKSPACE/scripts/check_openclash_connect.sh package/base-files/files/etc
 cp $GITHUB_WORKSPACE/scripts/check_wan_connect.sh package/base-files/files/etc
 cp $GITHUB_WORKSPACE/scripts/reset_get_img.sh package/base-files/files/etc

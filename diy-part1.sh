@@ -20,13 +20,10 @@
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 #echo 'src-git luci https://github.com/coolsnowwolf/luci.git;openwrt-24.10' >>feeds.conf.default
 
-# Fix duplicate luci feed: openwrt-25.12 added a new active luci line
-# We keep only the simple luci line and comment out all versioned ones
-sed -i '/^#src-git luci https:\/\/github.com\/coolsnowwolf\/luci$/s/^#//' feeds.conf.default
-sed -i '/^src-git luci https:\/\/github.com\/coolsnowwolf\/luci\.git;openwrt-/s/^/#/' feeds.conf.default
+# sed -i '/^#src-git luci https:\/\/github.com\/coolsnowwolf\/luci$/s/^#//' feeds.conf.default && sed -i '/^src-git luci https:\/\/github.com\/coolsnowwolf\/luci\.git;openwrt-23\.05$/s/^/#/' feeds.conf.default
 
-LUCI_BRANCH=18.06
-IMMORTALWRT_BRANCH=openwrt-18.06
+LUCI_BRANCH=master
+IMMORTALWRT_BRANCH=openwrt-25.12
 OPENCLASH_BRANCH=dev
 
 rm -rf package/lean/luci-app-argon-config

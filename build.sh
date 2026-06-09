@@ -110,6 +110,11 @@ make defconfig
 # Section 6: Package Fixes
 # ============================================================
 
+# Set GOPROXY for Go modules (fix frp/adguardhome build)
+export GOPROXY=https://goproxy.cn,https://goproxy.io,direct
+export GONOSUMCHECK=*
+export GOSUMDB=off
+
 # Ensure zerotier LuCI is enabled after defconfig
 sed -i 's/# CONFIG_PACKAGE_luci-app-zerotier is not set/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
 sed -i 's/CONFIG_PACKAGE_luci-app-zerotier=m/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
@@ -120,83 +125,6 @@ if [ -f $ZT_FEED/Makefile ]; then
   sed -i 's/PKG_VERSION:=1.16.0/PKG_VERSION:=1.16.2/' $ZT_FEED/Makefile
   sed -i '/PKG_HASH:=/d' $ZT_FEED/Makefile
   echo "✅ zerotier bumped to 1.16.2"
-fi
-
-# ============================================================
-# Section 7: Ruby 3.1 Fix (conditional — only if Ruby in config)
-# ============================================================
-
-# Set GOPROXY for Go modules (fix frp build failure)
-export GOPROXY=https://goproxy.cn,https://goproxy.io,direct
-export GONOSUMCHECK=*
-export GOSUMDB=off
-
-RUBY_TARBALL="$GITHUB_WORKSPACE/openwrt/dl/ruby-3.1.2.tar.xz"
-RUBY_MAKEFILE="$GITHUB_WORKSPACE/openwrt/feeds/packages/lang/ruby/Makefile"
-RUBY_URL="https://cache.ruby-lang.org/pub/ruby/3.1/ruby-3.1.2.tar.xz"
-
-if [ -f "$RUBY_MAKEFILE" ]; then
-  # Clean stale Ruby build artifacts from prior failed builds
-  RUBY_BUILD_DIR="$GITHUB_WORKSPACE/openwrt/build_dir/hostpkg/ruby-3.1.2"
-  if [ -d "$RUBY_BUILD_DIR" ]; then
-    echo "🧹 Removing stale Ruby build dir..."
-    rm -rf "$RUBY_BUILD_DIR"
-  fi
-  rm -f "$GITHUB_WORKSPACE/openwrt/staging_dir/hostpkg/bin/ruby" 2>/dev/null
-
-  echo "🔧 Pre-patching Ruby 3.1: download + patch + update PKG_HASH..."
-  mkdir -p "$GITHUB_WORKSPACE/openwrt/dl"
-  curl -fsSL "$RUBY_URL" -o "$RUBY_TARBALL" 2>/dev/null || wget -q "$RUBY_URL" -O "$RUBY_TARBALL"
-  if [ -f "$RUBY_TARBALL" ]; then
-    RUBY_TMP=$(mktemp -d)
-    tar xJf "$RUBY_TARBALL" -C "$RUBY_TMP" 2>/dev/null
-    RUBY_SRC="$RUBY_TMP/ruby-3.1.2"
-    # Patch generic_erb.rb: re-exec with system Ruby if erb not available
-    # System Ruby 3.0 has erb/optparse/fileutils as default gems.
-    # Handles chicken-and-egg: BASERUBY --disable=gems can't load erb,
-    # but we need erb to generate id.h before miniruby is built.
-    if [ -f "$RUBY_SRC/tool/generic_erb.rb" ]; then
-      {
-        head -1 "$RUBY_SRC/tool/generic_erb.rb"
-        cat <<'ERB_PATCH'
-begin
-  require "erb"
-rescue LoadError
-  exec "/usr/bin/ruby", File.expand_path(__FILE__), *ARGV
-end
-ERB_PATCH
-        tail -n +2 "$RUBY_SRC/tool/generic_erb.rb" | grep -v '^require "erb"$'
-      } > "$RUBY_SRC/tool/generic_erb.rb.tmp"
-      mv "$RUBY_SRC/tool/generic_erb.rb.tmp" "$RUBY_SRC/tool/generic_erb.rb"
-    fi
-    # Remove file2lastrev.rb references from uncommon.mk (bypasses optparse/fileutils)
-    sed -i '/file2lastrev\.rb/!b;N;d' "$RUBY_SRC/uncommon.mk" 2>/dev/null || true
-    # Set BASERUBY to system Ruby in Makefile.in
-    if [ -f "$RUBY_SRC/Makefile.in" ]; then
-      sed -i 's|BASERUBY = .*|BASERUBY = /usr/bin/ruby |' "$RUBY_SRC/Makefile.in"
-    fi
-    # Repack and update hash
-    tar cJf "$RUBY_TARBALL" -C "$RUBY_TMP" ruby-3.1.2 2>/dev/null
-    rm -rf "$RUBY_TMP"
-    NEW_HASH=$(sha256sum "$RUBY_TARBALL" | awk '{print $1}')
-    sed -i "s/^PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/" "$RUBY_MAKEFILE"
-    echo "✅ Ruby 3.1 pre-patched. PKG_HASH=$NEW_HASH"
-  else
-    echo "⚠️ Ruby download failed; make download will handle it"
-  fi
-  # Force BASERUBY to system Ruby via HOST_CONFIGURE_ARGS
-  if ! command -v /usr/bin/ruby &>/dev/null; then
-    echo "⚠️ /usr/bin/ruby not found; installing ruby..."
-    apt-get update -qq && apt-get install -y -qq ruby 2>/dev/null || true
-  fi
-  if command -v /usr/bin/ruby &>/dev/null; then
-    if ! grep -q 'with-baseruby' "$RUBY_MAKEFILE"; then
-      sed -i '/^CONFIGURE_ARGS += /i HOST_CONFIGURE_ARGS += --with-baseruby=/usr/bin/ruby' "$RUBY_MAKEFILE"
-      echo "✅ Added --with-baseruby=/usr/bin/ruby"
-    fi
-  else
-    echo "⚠️ Could not install Ruby; BASERUBY may fail on bundled gems"
-  fi
 fi
 
 # ============================================================

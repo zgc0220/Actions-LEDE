@@ -140,6 +140,12 @@ if [ -f $ZT_FEED/Makefile ]; then
   else
     echo "⚠️ zerotier hash compute failed, keeping original"
   fi
+  # Enable config_path for persistent zerotier data (identity, moon, networks)
+  ZT_CONF=$ZT_FEED/files/etc/config/zerotier
+  if [ -f "$ZT_CONF" ]; then
+    sed -i "s/#option config_path '.*'/option config_path '\/etc\/zerotier'/" "$ZT_CONF"
+    echo "✅ zerotier config_path enabled for data persistence"
+  fi
 fi
 
 # ============================================================

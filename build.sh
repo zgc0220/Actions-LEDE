@@ -42,6 +42,17 @@ DIY_P1_SH="diy-part1.sh"
 DIY_P2_SH="diy-part2.sh"
 
 # ============================================================
+# Section 2.1: Build Prerequisites
+# ============================================================
+
+# python3-setuptools is required by ImmortalWrt's u-boot prereq check
+if ! python3 -c "import setuptools" 2>/dev/null; then
+  echo "⚠️ python3-setuptools missing, installing..."
+  apt-get update -qq && apt-get install -y -qq python3-setuptools > /dev/null 2>&1
+  echo "✅ python3-setuptools installed"
+fi
+
+# ============================================================
 # Section 3: Clone/Pull OpenWrt
 # ============================================================
 
@@ -225,11 +236,13 @@ popd
 # Section 12: Save Config & Copy Firmware
 # ============================================================
 
-cp -f openwrt/.config ${GITHUB_WORKSPACE}/${CONFIG_FILE}
-
-# Return to workspace root
+# Return to workspace root FIRST
 export GITHUB_WORKSPACE="${GITHUB_WORKSPACE:-$(cd "$(dirname "$0")" 2>/dev/null && pwd || echo ".")}"
 cd "$GITHUB_WORKSPACE"
+
+# Save expanded .config as config.buildinfo (NEVER overwrite config.seed — it's our input!)
+cp -f openwrt/.config config.buildinfo
+echo "✅ Saved expanded config to config.buildinfo"
 
 mkdir -p "$RELEASE_DIR"
 

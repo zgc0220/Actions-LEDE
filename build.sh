@@ -114,6 +114,14 @@ make defconfig
 sed -i 's/# CONFIG_PACKAGE_luci-app-zerotier is not set/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
 sed -i 's/CONFIG_PACKAGE_luci-app-zerotier=m/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
 
+# Bump zerotier to 1.16.2 (feeds has 1.16.0, 1.16.2 supports moon natively)
+ZT_FEED=feeds/packages/net/zerotier
+if [ -f $ZT_FEED/Makefile ]; then
+  sed -i 's/PKG_VERSION:=1.16.0/PKG_VERSION:=1.16.2/' $ZT_FEED/Makefile
+  sed -i '/PKG_HASH:=/d' $ZT_FEED/Makefile
+  echo "✅ zerotier bumped to 1.16.2"
+fi
+
 # ============================================================
 # Section 7: Ruby 3.1 Fix (conditional — only if Ruby in config)
 # ============================================================

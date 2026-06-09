@@ -32,19 +32,7 @@ popd
 mv /tmp/openclash-tmp/luci-app-openclash package/emortal/luci-app-openclash
 rm -rf /tmp/openclash-tmp
 
-# 4. Bump zerotier to 1.16.2 (feeds has 1.16.0)
-# zerotier 1.16.2 supports moon natively — no need for custom moon/planet files
-ZT_FEED=feeds/packages/net/zerotier
-if [ -f $ZT_FEED/Makefile ]; then
-  sed -i 's/PKG_VERSION:=1.16.0/PKG_VERSION:=1.16.2/' $ZT_FEED/Makefile
-  # Remove old hash (will be auto-downloaded and verified at build time)
-  sed -i '/PKG_HASH:=/d' $ZT_FEED/Makefile
-  echo "✅ zerotier bumped to 1.16.2"
-else
-  echo "⚠️ zerotier not found in feeds, will use default version"
-fi
-
-# 5. adguardhome（beta 分支，luci-app-adguardhome）
+# 4. adguardhome（beta 分支，luci-app-adguardhome）
 rm -rf package/emortal/luci-app-adguardhome
 git clone --depth 1 -b beta https://github.com/rufengsuixing/luci-app-adguardhome.git package/emortal/luci-app-adguardhome
 sed -i "s/\$(TOPDIR)\/luci.mk/\$(TOPDIR)\/feeds\/luci\/luci.mk/g" package/emortal/luci-app-adguardhome/Makefile

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Actions-LEDE — Generic OpenWrt/ImmortalWrt Build Script
-# Base: ImmortalWrt 18.06-k5.4
+# Base: ImmortalWrt master
 #
 # Device-specific overrides: create device.conf in the same directory
 # Example device.conf:
@@ -34,7 +34,7 @@ RELEASE_DIR=${RELEASE_DIR:-$GITHUB_WORKSPACE/release}
 DEVICE_NAME=$(grep '^CONFIG_TARGET.*DEVICE.*=y' config.seed | sed -r 's/CONFIG_TARGET_(.*)_DEVICE.*=y/\1/')
 RELEASE_NAME=${RELEASE_NAME:-${DEVICE_NAME:-firmware}}
 REPO_URL="https://github.com/immortalwrt/immortalwrt"
-REPO_BRANCH="openwrt-18.06-k5.4"
+REPO_BRANCH="master"
 REPO_COMMIT=""
 FEEDS_CONF="feeds.conf.default"
 CONFIG_FILE="config.seed"
@@ -107,43 +107,12 @@ GITHUB_WORKSPACE=$GITHUB_WORKSPACE $GITHUB_WORKSPACE/$DIY_P2_SH
 make defconfig
 
 # ============================================================
-# Section 6: Package Replacement & Fixes
+# Section 6: Package Fixes
 # ============================================================
 
 # Ensure zerotier LuCI is enabled after defconfig
 sed -i 's/# CONFIG_PACKAGE_luci-app-zerotier is not set/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
 sed -i 's/CONFIG_PACKAGE_luci-app-zerotier=m/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
-
-# Replace feeds packages with coolsnowwolf/emortal versions
-# Only delete feeds version if emortal has a Makefile (graceful fallback)
-if [ -f package/emortal/luci-app-turboacc/Makefile ]; then
-  rm -rf feeds/luci/applications/luci-app-turboacc
-fi
-for pkg in luci-app-diskman luci-app-frpc luci-app-ksmbd luci-app-netdata luci-app-smartdns luci-app-ttyd luci-app-vlmcsd luci-app-zerotier; do
-  if [ -f package/emortal/$pkg/Makefile ]; then
-    rm -rf feeds/luci/applications/$pkg
-  fi
-done
-
-# Fix: feeds zerotier init.d conflicts with emortal daemon (START=99 vs START=90)
-# Only delete the conflicting init.d file, keep zerotier.start/stop (NAT rules), uci-defaults, etc.
-rm -f feeds/luci/applications/luci-app-zerotier/root/etc/init.d/zerotier
-rm -f package/emortal/luci-app-zerotier/root/etc/init.d/zerotier
-rm -rf package/emortal/luci-app-zerotier/root/etc/zerotier
-
-# Fix: defconfig may downgrade/remove turboacc sub-options
-sed -i 's/# CONFIG_PACKAGE_TURBOACC_INCLUDE_OFFLOADING is not set/CONFIG_PACKAGE_TURBOACC_INCLUDE_OFFLOADING=y/' .config
-sed -i 's/# CONFIG_PACKAGE_TURBOACC_INCLUDE_BBR_CCA is not set/CONFIG_PACKAGE_TURBOACC_INCLUDE_BBR_CCA=y/' .config
-sed -i 's/# CONFIG_PACKAGE_TURBOACC_INCLUDE_PDNSD is not set/CONFIG_PACKAGE_TURBOACC_INCLUDE_PDNSD=y/' .config
-
-# Fix: turboacc fullcone NAT — fw3 bool parser only accepts '1'/'true'/'yes'
-# "High Performing Mode" sets value '2' which fw3 treats as false → fullcone rules never written
-if [ -f package/emortal/luci-app-turboacc/root/etc/init.d/turboacc ]; then
-  sed -i 's|uci set firewall.@defaults[0].fullcone="${fullcone_nat}"|[ "${fullcone_nat}" != "0" ] \&\& uci set firewall.@defaults[0].fullcone="1" || uci set firewall.@defaults[0].fullcone="0"|g' package/emortal/luci-app-turboacc/root/etc/init.d/turboacc
-fi
-
-# Force rebuild luci-app-zerotier: stale build dir has old stamp files
-rm -rf build_dir/target-*/luci-app-zerotier
 
 # ============================================================
 # Section 7: Ruby 3.1 Fix (conditional — only if Ruby in config)

@@ -21,7 +21,7 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-18.06-k5.4
+  REPO_BRANCH: master
   REPO_COMMIT:
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: config.seed
@@ -155,23 +155,10 @@ jobs:
     - name: Apply build fixes
       run: |
         cd openwrt
-        # turboacc sub-options: defconfig may miss these
-        sed -i 's/# CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_SHORTCUT_FE_CM is not set/CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_SHORTCUT_FE_CM=y/' .config
-        sed -i 's/# CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_SHORTCUT_FE is not set/CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_SHORTCUT_FE=y/' .config
-        sed -i 's/# CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_SHORTCUT_FE_GSO is not set/CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_SHORTCUT_FE_GSO=y/' .config
-        sed -i 's/# CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_NFTFULLCONE is not set/CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_NFTFULLCONE=y/' .config
-        sed -i 's/# CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_DNSFORWARDER is not set/CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_DNSFORWARDER=y/' .config
-        sed -i 's/# CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_DNSPROXY is not set/CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_DNSPROXY=y/' .config
         # enable zerotier and adguardhome
         sed -i 's/# CONFIG_PACKAGE_zerotier is not set/CONFIG_PACKAGE_zerotier=y/' .config
         sed -i 's/# CONFIG_PACKAGE_luci-app-zerotier is not set/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
         sed -i 's/# CONFIG_PACKAGE_luci-app-adguardhome is not set/CONFIG_PACKAGE_luci-app-adguardhome=y/' .config
-        # turboacc fullcone NAT fix: fw3 bool parser only accepts 1/true/yes, not 2
-        TURBOACC_INIT=$(find feeds -path '*/luci-app-turboacc/root/etc/init.d/turboacc' 2>/dev/null | head -1)
-        if [ -n "$TURBOACC_INIT" ]; then
-          sed -i 's/uci set firewall.@defaults\[0\].fullcone="${fullcone_nat}"/[ "${fullcone_nat}" != "0" ] \&\& uci set firewall.@defaults[0].fullcone="1" || uci set firewall.@defaults[0].fullcone="0"/' "$TURBOACC_INIT"
-          echo "✅ turboacc fullcone NAT fix applied"
-        fi
 
     - name: Pre-compile luci-base (generate po2lmo)
       run: |

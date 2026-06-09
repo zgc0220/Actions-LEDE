@@ -143,7 +143,7 @@ if [ -f $ZT_FEED/Makefile ]; then
 fi
 
 # ============================================================
-# Section 8: GCC 8.4.0 Fix (conditional — only if tarball exists)
+# Section 7: GCC 8.4.0 Fix (conditional — only if tarball exists)
 # ============================================================
 
 GCC_TARBALL="$GITHUB_WORKSPACE/openwrt/dl/gcc-8.4.0.tar.xz"
@@ -167,7 +167,7 @@ if [ -f "$GCC_TARBALL" ]; then
 fi
 
 # ============================================================
-# Section 9: Download
+# Section 8: Download
 # ============================================================
 
 # Drop caches to free memory before compilation (prevents OOM in Docker)
@@ -177,33 +177,8 @@ make download -j8 || make download -j1 V=s
 find dl -not -path "dl/go-mod-cache/*" -size -1024c -exec rm -f {} \;
 find dl -not -path "dl/go-mod-cache/*" -size 0 -exec rm -f {} \;
 
-# Also patch any previously extracted Ruby build (incremental builds)
-RUBY_BUILD="$GITHUB_WORKSPACE/openwrt/build_dir/hostpkg/ruby-3.1.2"
-if [ -d "$RUBY_BUILD/tool" ]; then
-  if [ -f "$RUBY_BUILD/tool/generic_erb.rb" ]; then
-    if ! grep -q 'rescue LoadError' "$RUBY_BUILD/tool/generic_erb.rb"; then
-      {
-        head -1 "$RUBY_BUILD/tool/generic_erb.rb"
-        cat <<'ERB_PATCH'
-begin
-  require "erb"
-rescue LoadError
-  exec "/usr/bin/ruby", File.expand_path(__FILE__), *ARGV
-end
-ERB_PATCH
-        tail -n +2 "$RUBY_BUILD/tool/generic_erb.rb" | grep -v '^require "erb"$'
-      } > "$RUBY_BUILD/tool/generic_erb.rb.tmp"
-      mv "$RUBY_BUILD/tool/generic_erb.rb.tmp" "$RUBY_BUILD/tool/generic_erb.rb"
-    fi
-  fi
-  sed -i '/file2lastrev\.rb/!b;N;d' "$RUBY_BUILD/uncommon.mk" 2>/dev/null || true
-  if [ -f "$RUBY_BUILD/Makefile" ]; then
-    sed -i 's|BASERUBY = .*|BASERUBY = /usr/bin/ruby |' "$RUBY_BUILD/Makefile"
-  fi
-fi
-
 # ============================================================
-# Section 10: vlmcsd GCC 13 Fix
+# Section 9: vlmcsd GCC 13 Fix
 # ============================================================
 
 # $(notdir $(CC)) breaks when CC="ccache gcc" (contains spaces)
@@ -214,7 +189,7 @@ if [ -n "$VLMCSD_GNUMAKE" ]; then
 fi
 
 # ============================================================
-# Section 11: Go Packages Pre-compile
+# Section 10: Go Packages Pre-compile
 # ============================================================
 
 # Go packages (frp, adguardhome, filebrowser) have intermittent parallel build
@@ -234,14 +209,14 @@ done
 echo "=== Go packages pre-compilation done ==="
 
 # ============================================================
-# Section 12: Main Build
+# Section 11: Main Build
 # ============================================================
 
 make -j$(nproc) || make -j1 || make -j1 V=s
 popd
 
 # ============================================================
-# Section 13: Save Config & Copy Firmware
+# Section 12: Save Config & Copy Firmware
 # ============================================================
 
 cp -f openwrt/.config ${GITHUB_WORKSPACE}/${CONFIG_FILE}

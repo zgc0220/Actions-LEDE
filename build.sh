@@ -115,6 +115,13 @@ export GOPROXY=https://goproxy.cn,https://goproxy.io,direct
 export GONOSUMCHECK=*
 export GOSUMDB=off
 
+# Fix netdata C++17 compatibility (protobuf 29.5 / abseil-cpp requires C++17, netdata hardcodes C++11)
+NETDATA_FEED=feeds/packages/admin/netdata
+if [ -f "$NETDATA_FEED/Makefile" ]; then
+  sed -i '/m4_esyscmd/a\\t$(SED) '"'"'s/-std=c++11/-std=c++17/g'"'"' $(PKG_BUILD_DIR)/configure.ac' "$NETDATA_FEED/Makefile"
+  echo "✅ netdata: forced -std=c++17 for protobuf 29.5 compatibility"
+fi
+
 # Ensure zerotier LuCI is enabled after defconfig
 sed -i 's/# CONFIG_PACKAGE_luci-app-zerotier is not set/CONFIG_PACKAGE_luci-app-zerotier=y/' .config
 sed -i 's/CONFIG_PACKAGE_luci-app-zerotier=m/CONFIG_PACKAGE_luci-app-zerotier=y/' .config

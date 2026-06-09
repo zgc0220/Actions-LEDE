@@ -123,8 +123,14 @@ sed -i 's/CONFIG_PACKAGE_luci-app-zerotier=m/CONFIG_PACKAGE_luci-app-zerotier=y/
 ZT_FEED=feeds/packages/net/zerotier
 if [ -f $ZT_FEED/Makefile ]; then
   sed -i 's/PKG_VERSION:=1.16.0/PKG_VERSION:=1.16.2/' $ZT_FEED/Makefile
-  sed -i '/PKG_HASH:=/d' $ZT_FEED/Makefile
-  echo "✅ zerotier bumped to 1.16.2"
+  # Download and compute correct hash for 1.16.2
+  ZT_HASH=$(curl -sL "https://codeload.github.com/zerotier/ZeroTierOne/tar.gz/1.16.2" | sha256sum | awk '{print $1}')
+  if [ -n "$ZT_HASH" ] && [ ${#ZT_HASH} -eq 64 ]; then
+    sed -i "s/^PKG_HASH:=.*/PKG_HASH:=$ZT_HASH/" $ZT_FEED/Makefile
+    echo "✅ zerotier bumped to 1.16.2 (hash: ${ZT_HASH:0:12}...)"
+  else
+    echo "⚠️ zerotier hash compute failed, keeping original"
+  fi
 fi
 
 # ============================================================

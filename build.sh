@@ -116,9 +116,19 @@ export GONOSUMCHECK=*
 export GOSUMDB=off
 
 # Fix netdata C++17 compatibility (protobuf 29.5 / abseil-cpp requires C++17, netdata hardcodes C++11)
+# Root cause: autoreconf runs during Build/Prepare (PKG_FIXUP:=autoreconf), generating
+# configure script with -std=c++11. Modifying configure.ac in Build/Configure is too late.
+# Fix: add sed to modify GENERATED Makefile after configure runs.
 NETDATA_FEED=feeds/packages/admin/netdata
 if [ -f "$NETDATA_FEED/Makefile" ]; then
-  sed -i '/m4_esyscmd/a\\t$(SED) '"'"'s/-std=c++11/-std=c++17/g'"'"' $(PKG_BUILD_DIR)/configure.ac' "$NETDATA_FEED/Makefile"
+  python3 << 'PYEOF'
+p = "feeds/packages/admin/netdata/Makefile"
+c = open(p).read()
+old = "\t$(Build/Configure/Default)\nendef"
+new = "\t$(Build/Configure/Default)\n\t$(SED) \"s/-std=c++11/-std=c++17/g\" $(PKG_BUILD_DIR)/Makefile\nendef"
+c = c.replace(old, new)
+open(p, "w").write(c)
+PYEOF
   echo "✅ netdata: forced -std=c++17 for protobuf 29.5 compatibility"
 fi
 
